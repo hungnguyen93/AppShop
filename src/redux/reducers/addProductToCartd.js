@@ -7,9 +7,11 @@ const arrCartd = (state = defaultArrCartd, action) => {
                 id: action.param.id,
                 name: action.param.name,
                 price: action.param.price,
-                image: action.param.images[0],
-                quantity: action.quantity
+                images: action.param.images.map(e => e),
+                quantity: 1
             }].concat(state)
+        case 'DELETE_PRODUCT':
+            return state.filter(e => e.id !== action.id)
         case 'ADD_QUANTITY':
             return state.map(e => {
                 if(e.id !== action.id) return e;

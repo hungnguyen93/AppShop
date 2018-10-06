@@ -17,18 +17,27 @@ import icContact0 from '../../../media/appIcon/contact0.png';
 import HomeStack from '../../../Navigations/HomeStack';
 import CartStack from '../../../Navigations/CartStack';
 import SearchStack from '../../../Navigations/SearchStack';
+import getCart from '../../../api/getCart';
+import {addProductToCartd} from '../../../redux/actions/addProductToCartd';
 import { connect } from 'react-redux';
 class Shop extends Component {
     constructor(props) {
         super(props);
         this.state = { 
             selectedTab: "home" ,
+            arr:null
         }
     }
     
-    componentDidMount() {
+   componentWillMount() {
+       getCart()
+       .then(cart => {
+        //    cart.map(e => console.log(e));
         
-    }
+           cart.map(e => this.setState({arr:e},()=>this.props.addProductToCartd(this.state.arr)))
+        })
+        
+   }
 
     openMenu() {
         const { open } = this.props;
@@ -92,7 +101,7 @@ function mapStateTopProps(state) {
         arrCart: state
     }
 }
-export default connect (mapStateTopProps)(Shop)
+export default connect (mapStateTopProps,{addProductToCartd})(Shop)
 const style = StyleSheet.create({
     icon: {
         height: height(3.7), width: width(6),

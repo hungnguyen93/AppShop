@@ -1,7 +1,8 @@
 import { AsyncStorage } from 'react-native';
 const saveCart = async (arrCart) => {
-    // if(!!arCart){
-        await AsyncStorage.setItem('@cart', JSON.stringify(arrCart))
-    // } else await AsyncStorage.setItem('@cart', [])
+    try {
+        await AsyncStorage.setItem('cart', JSON.stringify(arrCart));
+      } catch (error) {
+      }
 };
 export default saveCart;

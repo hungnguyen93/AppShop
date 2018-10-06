@@ -1,21 +1,24 @@
 import React, { Component } from 'react';
 import {
-    View, Text, TouchableOpacity, ScrollView,
+    View, Text, TouchableOpacity, AsyncStorage,
     Dimensions, StyleSheet, Image, FlatList
 } from 'react-native';
 import { connect } from 'react-redux';
 import { Quantity } from '../../../../redux/actions/Quantity';
+import { delete_product } from '../../../../redux/actions/delete_product';
+import saveCart from '../../../../api/saveCart';
 
-import getCart from '../../../../api/getCart';
 const url = 'http://localhost:8080/api/images/product/';
 function toTitleCase(str) {
     return str.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 } // function sua kys tu dau tien viet hoa. VD: nguyen quoc hung thanh Nguyen Quoc Hung
 
 class CartView extends Component {
-    componentWillMount() {
-        getCart()
-        .then(cart => console.log(cart))
+    constructor(props){
+        super(props);
+        this.state = {
+            total: 0
+        }
     }
     gotoDetail() {
         const { navigator } = this.props;
@@ -25,51 +28,77 @@ class CartView extends Component {
         this.props.Quantity(type, id)
     }
     render() {
-        
         const { arrCartd } = this.props;
-        const { main, checkoutButton, checkoutTitle, wrapper,
-            product, mainRight, productController,
-            txtName, txtPrice, productImage, numberOfProduct,
-            txtShowDetail, showDetailContainer } = styles;
+        saveCart(arrCartd);
+        const { checkoutButton, checkoutTitle, wrapper } = styles;
         return (
             <View style={wrapper}>
                 <FlatList
                     data={arrCartd}
-                    renderItem={({ item }) => <View style={product}>
-                        <Image source={{ uri: `${url}${item.image}` }} style={productImage} />
-                        <View style={[mainRight]}>
-                            <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                <Text style={txtName}>{toTitleCase(item.name)}</Text>
-                                <TouchableOpacity>
-                                    <Text style={{ fontFamily: 'Avenir', color: '#969696' }}>X</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <View>
-                                <Text style={txtPrice}>{item.price}$</Text>
-                            </View>
-                            <View style={productController}>
-                                <View style={numberOfProduct}>
-                                    <TouchableOpacity onPress={() => this._quantity('ADD_QUANTITY', item.id)}>
-                                        <Text>+</Text>
-                                    </TouchableOpacity>
-                                    <Text>{item.quantity}</Text>
-                                    <TouchableOpacity onPress={() => this._quantity('DECREASE_QUANTITY', item.id)}>
-                                        <Text>-</Text>
-                                    </TouchableOpacity>
-                                </View>
-                                <TouchableOpacity style={showDetailContainer}>
-                                    <Text style={txtShowDetail}>SHOW DETAILS</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>}
+                    renderItem={({ item }) => this._renderItems(item)}
                     keyExtractor={(item, index) => item.id}
                 />
-                <TouchableOpacity style={checkoutButton}>
-                    <Text style={checkoutTitle}>TOTAL {1000}$ CHECKOUT NOW</Text>
+                <TouchableOpacity style={checkoutButton}
+                    onPress={() => this._total(arrCartd)}
+                >
+                    <Text style={checkoutTitle}>TOTAL {this.state.total}$ CHECKOUT NOW</Text>
                 </TouchableOpacity>
             </View>
         );
+    }
+
+    _renderItems = (item) => {
+        const {
+            product, mainRight, productController,
+            txtName, txtPrice, productImage, numberOfProduct,
+            txtShowDetail, showDetailContainer } = styles;
+        return <View style={product}>
+            <Image source={{ uri: `${url}${item.images[0]}` }} style={productImage} />
+            <View style={[mainRight]}>
+                <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                    <Text style={txtName}>{toTitleCase(item.name)}</Text>
+                    <TouchableOpacity
+                        onPress={() => this._delete(item.id)}
+                    >
+                        <Text style={{ fontFamily: 'Avenir', color: '#969696' }}>X</Text>
+                    </TouchableOpacity>
+                </View>
+                <View>
+                    <Text style={txtPrice}>{item.price}$</Text>
+                </View>
+                <View style={productController}>
+                    <View style={numberOfProduct}>
+                        <TouchableOpacity onPress={() => this._quantity('ADD_QUANTITY', item.id)}>
+                            <Text>+</Text>
+                        </TouchableOpacity>
+                        <Text>{item.quantity}</Text>
+                        <TouchableOpacity onPress={() => this._quantity('DECREASE_QUANTITY', item.id)}>
+                            <Text>-</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TouchableOpacity style={showDetailContainer}>
+                        <Text style={txtShowDetail}>SHOW DETAILS</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    }
+
+    _total = (item) => {
+        let arr = [];
+        item.map(item => {
+            const total = item.price * item.quantity;
+            arr.push(total);
+        });
+     const total = arr.reduce((count, item) => {
+            return count += item
+        }, 0);
+        this.setState({total})
+    };
+
+    _delete = (id) => {
+        const { delete_product } = this.props;
+        delete_product(id);
     }
 }
 function mapStateTopProps(state) {
@@ -77,7 +106,7 @@ function mapStateTopProps(state) {
         arrCartd: state
     }
 }
-export default connect(mapStateTopProps, { Quantity })(CartView)
+export default connect(mapStateTopProps, { Quantity, delete_product })(CartView)
 
 const { width } = Dimensions.get('window');
 const imageWidth = width / 4;

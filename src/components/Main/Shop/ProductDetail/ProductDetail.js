@@ -16,14 +16,12 @@ class ProductDetail extends Component {
         navigation.goBack();
     }
     _addProductToCartd = (item, quantity) => {
-        console.log(item)
         const {arrCart} = this.props;
-        console.log(arrCart.map(e=>e.id === item.id))
-        if( item.id === arrCart.map(e=>e.id === item.id)){
+        if(arrCart.filter(e=>e.id === item.id).length >0){
            return alert('san pham da ton tai trong do hang');
         };
         this.props.addProductToCartd(item, quantity);
-        saveCart(this.props.arrCart);
+        
     }
     render() {
         const { navigation } = this.props;
@@ -43,7 +41,7 @@ class ProductDetail extends Component {
                         <TouchableOpacity onPress={this.goBack}>
                             <Image style={backStyle} source={back} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this._addProductToCartd(item, quantity)}>
+                        <TouchableOpacity onPress={() => this._addProductToCartd(item)}>
                             <Image style={cartStyle} source={cart} />
                         </TouchableOpacity>
                     </View>
@@ -78,7 +76,7 @@ class ProductDetail extends Component {
     }
 }
 function mapStateToProps(state){
-    console.log(state)
+     saveCart(state);
     return {
         arrCart: state
     }
